@@ -1,7 +1,8 @@
 {
   "name": "codesign-utils",
   "version": "1.0.2",
-  "description": "",
+  "private": true,
+  "description": "Lorem ipsum dolor sit amet",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
