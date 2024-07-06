@@ -1,19 +1,49 @@
 {
-  "name": "codesign-utils",
-  "version": "1.0.3",
-  "description": "Lorem ipsum dolor sit amet",
-  "main": "index.js",
+  "name": "@codesign-eu/utils",
+  "version": "1.0.1",
+  "description": "",
+  "type": "module",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.es.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "/dist"
+  ],
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "format": "prettier --write --parser typescript '**/*.{ts,tsx}'",
+    "lint": "eslint . --ext .ts,.tsx --ignore-path .gitignore --fix",
+    "build": "tsc && vite build",
+    "test": "vitest run",
+    "test:watch": "vitest -- --watch",
+    "test:ui": "vitest --ui",
+    "prepare": "npm run build"
   },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/msciborowski/codesign-utils.git"
+  "lint-staged": {
+    "*.{ts,tsx}": [
+      "npm run format",
+      "npm run lint",
+      "npm run test"
+    ]
   },
-  "author": "",
+  "keywords": [],
+  "author": "Marcin Ściborowski",
   "license": "ISC",
-  "bugs": {
-    "url": "https://github.com/msciborowski/codesign-utils/issues"
-  },
-  "homepage": "https://github.com/msciborowski/codesign-utils#readme"
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.6",
+    "@testing-library/react": "^16.0.0",
+    "@typescript-eslint/eslint-plugin": "^7.15.0",
+    "@typescript-eslint/parser": "^7.15.0",
+    "date-fns": "^3.6.0",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.1.3",
+    "husky": "^9.0.11",
+    "jsdom": "^24.1.0",
+    "lint-staged": "^15.2.7",
+    "prettier": "^3.3.2",
+    "typescript": "^5.5.3",
+    "vite": "^5.3.3",
+    "vite-plugin-dts": "^3.9.1",
+    "vitest": "^1.6.0"
+  }
 }
