@@ -1,7 +1,8 @@
 import { addMinutes, differenceInDays, format, formatDistance } from 'date-fns'
 
-const timestampToString = (ts: Date): string => {
-  return format(addMinutes(ts, ts.getTimezoneOffset()), 'yyyy-MM-dd H:mm')
+const timestampToString = (ts: Date, showSeconds?: boolean): string => {
+  const d = new Date(ts)
+  return format(addMinutes(d, d.getTimezoneOffset()), `yyyy-MM-dd H:mm${showSeconds ? ':ss' : ''}`)
 }
 
 const formatDay = (d: Date): string => {
