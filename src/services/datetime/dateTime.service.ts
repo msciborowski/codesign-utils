@@ -25,8 +25,13 @@ const timeAgo = (d: Date): string => {
   return formatDistance(new Date(d), new Date())
 }
 
+const dateIsFromTheFuture = (d: Date): boolean => {
+  return new Date(d) > new Date()
+}
+
 export const dateTimeService = {
   daysBetweenToday,
+  dateIsFromTheFuture,
   formatDay,
   parseDate,
   timestampToString,
