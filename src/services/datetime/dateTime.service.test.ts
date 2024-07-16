@@ -7,7 +7,7 @@ import '@testing-library/jest-dom'
 describe('dateTime service', () => {
   describe('formatDay', () => {
     it('should format the date to YYYY-MM-DD', () => {
-      const date = new Date(2024, 0, 1, 12, 23, 34.555)
+      const date = new Date(2024, 0, 1, 12, 23, 34.567)
       const formatted = dateTimeService.formatDay(date)
       expect(formatted).toBe('2024-01-01')
     })
