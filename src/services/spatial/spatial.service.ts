@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { LatLngBounds } from 'leaflet'
 
 export const swapLatLng = (arr: any) =>
