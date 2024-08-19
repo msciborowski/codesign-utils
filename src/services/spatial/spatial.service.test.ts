@@ -84,4 +84,58 @@ describe('spatial service', () => {
       ])
     })
   })
+
+  describe('getPointFromPolygon', () => {
+    it('1', () => {
+      const coords = [123, 234]
+      expect(spatialService.getPointFromPolygon(coords)).toEqual([123, 234])
+    })
+    it('2', () => {
+      const coords = [
+        [345, 456],
+        [6, 27],
+      ]
+      expect(spatialService.getPointFromPolygon(coords)).toEqual([345, 456])
+    })
+    it('3', () => {
+      const coords = [
+        [111, 222],
+        [
+          [345, 456],
+          [567, 678],
+        ],
+        [1, 2],
+        [
+          [
+            [222, 333],
+            [444, 555],
+            [
+              [666, 777],
+              [888, 999],
+            ],
+          ],
+        ],
+      ]
+      expect(spatialService.getPointFromPolygon(coords)).toEqual([111, 222])
+    })
+    it('4', () => {
+      const coords = [
+        [
+          [
+            [222, 333],
+            [444, 555],
+            [
+              [666, 777],
+              [888, 999],
+            ],
+          ],
+        ],
+        [1, 2],
+      ]
+      expect(spatialService.getPointFromPolygon(coords)).toEqual([222, 333])
+    })
+    it('5', () => {
+      expect(spatialService.getPointFromPolygon(null)).toBeUndefined()
+    })
+  })
 })

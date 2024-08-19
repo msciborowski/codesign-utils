@@ -6,7 +6,13 @@ export const swapLatLng = (arr: any) =>
 
 export const leafletBoundsToString = (bounds: LatLngBounds) => `n=${bounds.getNorth()}&e=${bounds.getEast()}&s=${bounds.getSouth()}&w=${bounds.getWest()}`
 
+export const getPointFromPolygon = (coords: any): any => {
+  if (!coords) return
+  return coords.length === 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number' ? coords : getPointFromPolygon(coords[0])
+}
+
 export const spatialService = {
   swapLatLng,
   leafletBoundsToString,
+  getPointFromPolygon,
 }
