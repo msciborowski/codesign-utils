@@ -138,4 +138,117 @@ describe('spatial service', () => {
       expect(spatialService.getPointFromPolygon(null)).toBeUndefined()
     })
   })
+
+  describe('coordinatesGeoJsonToString', () => {
+    it('should return null when type different than point', () => {
+      const geoJson = {
+        type: 'Other',
+        coordinates: [45.678, 12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToString(geoJson)
+      expect(result).toBeUndefined()
+    })
+
+    it('should return coordinates string from valid GeoJSON Point', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [45.678, 12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToString(geoJson)
+      expect(result).toBe('12.345, 45.678')
+    })
+  })
+
+  describe('coordinatesGeoJsonToDegreesString', () => {
+    it('should return null when type different than point', () => {
+      const geoJson = {
+        type: 'Other',
+        coordinates: [45.678, 12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBeUndefined()
+    })
+
+    it('should return coordinates string from valid GeoJSON Point', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [45.678, 12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('12°20\'42"N, 45°40\'40"E')
+    })
+
+    it('should handle negative latitude (South)', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [45.678, -12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('12°20\'42"S, 45°40\'40"E')
+    })
+
+    it('should handle negative longitude (West)', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [-45.678, 12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('12°20\'42"N, 45°40\'40"W')
+    })
+
+    it('should handle both negative coordinates (SW)', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [-45.678, -12.345],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('12°20\'42"S, 45°40\'40"W')
+    })
+
+    it('should handle zero coordinates', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [0, 0],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('0°0\'0"N, 0°0\'0"E')
+    })
+
+    it('should handle exact degree values', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [90, 45],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('45°0\'0"N, 90°0\'0"E')
+    })
+
+    it('should handle extreme latitude (near North Pole)', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [0, 89.999],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('89°59\'56"N, 0°0\'0"E')
+    })
+
+    it('should handle extreme latitude (near South Pole)', () => {
+      const geoJson = {
+        type: 'Point',
+        coordinates: [0, -89.999],
+      }
+      const result = spatialService.coordinatesGeoJsonToDegreesString(geoJson)
+      expect(result).toBe('89°59\'56"S, 0°0\'0"E')
+    })
+
+    it('should return undefined when geoJson is null', () => {
+      const result = spatialService.coordinatesGeoJsonToDegreesString(null)
+      expect(result).toBeUndefined()
+    })
+
+    it('should return undefined when geoJson is undefined', () => {
+      const result = spatialService.coordinatesGeoJsonToDegreesString(undefined)
+      expect(result).toBeUndefined()
+    })
+  })
 })
