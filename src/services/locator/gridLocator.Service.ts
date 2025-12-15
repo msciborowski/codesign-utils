@@ -1,3 +1,6 @@
+import * as turf from '@turf/turf'
+import type { Feature, Polygon, MultiPolygon } from 'geojson'
+
 /**
  * Convert latitude & longitude to Maidenhead (QTH) locator
  *
@@ -117,7 +120,72 @@ const gridToLatLng = (
   return { lat, lng }
 }
 
+const gridStep = (precision: number) => {
+  switch (precision) {
+    case 4:
+      return { lng: 2, lat: 1 }
+    case 6:
+      return { lng: 2 / 24, lat: 1 / 24 }
+    case 8:
+      return { lng: 2 / 240, lat: 1 / 240 }
+    default:
+      throw new Error('Unsupported Maidenhead precision')
+  }
+}
+
+const qthToPolygon = (locator: string): Feature<Polygon> => {
+  const { lat, lng } = gridToLatLng(locator)
+
+  let lonSize = 20
+  let latSize = 10
+
+  if (locator.length >= 4) {
+    lonSize = 2
+    latSize = 1
+  }
+  if (locator.length >= 6) {
+    lonSize = 2 / 24
+    latSize = 1 / 24
+  }
+  if (locator.length >= 8) {
+    lonSize = 2 / 240
+    latSize = 1 / 240
+  }
+
+  const minLon = lng - lonSize / 2
+  const maxLon = lng + lonSize / 2
+  const minLat = lat - latSize / 2
+  const maxLat = lat + latSize / 2
+
+  return turf.bboxPolygon([minLon, minLat, maxLon, maxLat]) as Feature<Polygon>
+}
+
+const locatorGridsForGeoJSON = (feature: Feature<Polygon | MultiPolygon>, precision: number): string[] => {
+  const bbox = turf.bbox(feature)
+  const step = gridStep(precision)
+  const result = new Set<string>()
+
+  for (let lon = bbox[0]; lon <= bbox[2]; lon += step.lng) {
+    for (let lat = bbox[1]; lat <= bbox[3]; lat += step.lat) {
+      const centerLon = lon + step.lng / 2
+      const centerLat = lat + step.lat / 2
+
+      const qth = latLngToGrid(centerLat, centerLon, precision)
+      if (result.has(qth)) continue
+
+      const gridPoly = qthToPolygon(qth)
+
+      if (turf.booleanIntersects(feature, gridPoly)) {
+        result.add(qth)
+      }
+    }
+  }
+
+  return Array.from(result).sort()
+}
+
 export const GridLocationService = {
   latLngToGrid,
   gridToLatLng,
+  locatorGridsForGeoJSON,
 }

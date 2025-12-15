@@ -132,4 +132,29 @@ describe('gridLocator service', () => {
       expect(latLng).toEqual({ lat: -33.5, lng: 151 })
     })
   })
+
+  describe('locatorGridsForGeoJSON', () => {
+    it('should return locator grids for given GeoJSON polygon', () => {
+      const polygon: Feature<Polygon> = {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-5.0, 50.0],
+              [-5.0, 51.0],
+              [-4.0, 51.0],
+              [-4.0, 50.0],
+              [-5.0, 50.0],
+            ],
+          ],
+        },
+      }
+
+      const locators = GridLocationService.locatorGridsForGeoJSON(polygon, 4)
+      // expect(locators).toEqual([])
+      expect(locators).toEqual(['IO80', 'IO81'])
+    })
+  })
 })
