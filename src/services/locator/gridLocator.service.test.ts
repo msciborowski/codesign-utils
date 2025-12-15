@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { GridLocationService } from './gridLocator.Service'
 
 import '@testing-library/jest-dom'
+import { Feature, Polygon } from 'geojson'
 
 describe('gridLocator service', () => {
   describe('latLng to Locator', () => {
