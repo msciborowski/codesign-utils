@@ -1,23 +1,38 @@
 {
   "name": "@codesign-eu/utils",
-  "version": "1.0.23",
-  "description": "",
+  "version": "1.0.24",
+  "description": "Utility helpers for spatial, date/time, and Maidenhead grid operations used by Codesign applications.",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "files": [
-    "/dist"
+    "dist"
   ],
+  "sideEffects": false,
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
   "scripts": {
-    "check": "npm run format && npm run lint && npm run build && npm run test",
-    "format": "prettier --write --parser typescript '**/*.{ts,tsx}'",
-    "lint": "eslint . --ext .ts,.tsx --ignore-pattern .gitignore",
-    "lint:fix": "eslint . --ext .ts,.tsx --ignore-pattern .gitignore --fix",
-    "build": "tsc && vite build",
+    "build": "vite build",
+    "check": "npm run lint && npm run typecheck && npm run test && npm run build",
+    "format": "prettier --write .",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "prepack": "npm run build",
+    "prepare": "husky",
     "test": "vitest run",
     "test:watch": "vitest -- --watch",
     "test:ui": "vitest --ui",
-    "prepare": "npm run build"
+    "typecheck": "tsc --noEmit",
+    "version:auto": "node scripts/bump-version-on-main.mjs",
+    "version:major": "npm version major --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:patch": "npm version patch --no-git-tag-version"
   },
   "lint-staged": {
     "*.{ts,tsx}": [
@@ -26,25 +41,39 @@
       "npm run test"
     ]
   },
-  "keywords": [],
-  "author": "Marcin Ściborowski",
+  "keywords": [
+    "utilities",
+    "geospatial",
+    "geojson",
+    "maidenhead",
+    "datetime"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/msciborowski/codesign-utils.git"
+  },
+  "homepage": "https://github.com/msciborowski/codesign-utils#readme",
+  "bugs": {
+    "url": "https://github.com/msciborowski/codesign-utils/issues"
+  },
+  "author": "Marcin Sciborowski",
   "license": "ISC",
+  "dependencies": {
+    "@turf/turf": "^7.3.1",
+    "date-fns": "^3.6.0",
+    "geojson": "^0.5.0"
+  },
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "@testing-library/jest-dom": "^6.4.6",
     "@testing-library/react": "^16.0.0",
-    "@turf/turf": "^7.3.1",
-    "@types/leaflet": "^1.9.12",
     "@typescript-eslint/eslint-plugin": "^8.50.0",
     "@typescript-eslint/parser": "^8.50.0",
-    "date-fns": "^3.6.0",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^9.1.2",
     "eslint-plugin-prettier": "^5.5.4",
-    "geojson": "^0.5.0",
     "husky": "^9.0.11",
     "jsdom": "^26.0.0",
-    "leaflet": "^1.9.4",
     "lint-staged": "^15.2.7",
     "prettier": "^3.3.2",
     "typescript": "^5.5.3",
@@ -52,9 +81,5 @@
     "vite": "^7.3.0",
     "vite-plugin-dts": "^4.5.0",
     "vitest": "^3.0.5"
-  },
-  "peerDependencies": {
-    "@turf/turf": "^7.3.1",
-    "geojson": "^0.5.0"
   }
 }

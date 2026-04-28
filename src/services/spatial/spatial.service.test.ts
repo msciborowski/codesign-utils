@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { spatialService } from './spatial.service'
-import { LatLng, LatLngBounds } from 'leaflet'
 
 // TODO it should work without this
 import '@testing-library/jest-dom'
 
 describe('spatial service', () => {
   describe('leafletBoundsToString', () => {
-    const bounds: LatLngBounds = new LatLngBounds(new LatLng(12.345, 23.456), new LatLng(34.567, 45.678))
+    const bounds = {
+      getNorth: () => 34.567,
+      getEast: () => 45.678,
+      getSouth: () => 12.345,
+      getWest: () => 23.456,
+    }
 
     it('should convert leafletBounds to url string', () => {
       const boundsString = spatialService.leafletBoundsToString(bounds)

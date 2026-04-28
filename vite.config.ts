@@ -1,26 +1,27 @@
 /// <reference types="vitest" />
 
-import { defineConfig } from 'vite'
 import dts from 'vite-plugin-dts'
-// import { peerDependencies } from './package.json'
+import { defineConfig } from 'vite'
+import { dependencies } from './package.json'
 
 export default defineConfig({
+  plugins: [
+    dts({
+      include: ['src'],
+      exclude: ['src/**/*.test.ts'],
+    }),
+  ],
   build: {
     lib: {
-      entry: './src/index.ts', // Specifies the entry point for building the library.
-      name: 'vite-react-ts-button', // Sets the name of the generated library.
-      // fileName: format => `index.${format}.js`, // Generates the output file name based on the format.
-      fileName: 'index', // Generates the output file name based on the format.
-      formats: [
-        // 'cjs',
-        'es',
-      ], // Specifies the output formats (CommonJS and ES modules).
+      entry: './src/index.ts',
+      name: 'CodesignUtils',
+      formats: ['es', 'cjs'],
+      fileName: format => `index.${format === 'es' ? 'js' : 'cjs'}`,
     },
-    // rollupOptions: {
-    //   external: [...Object.keys(peerDependencies)], // Defines external dependencies for Rollup bundling.
-    // },
-    sourcemap: true, // Generates source maps for debugging.
-    emptyOutDir: true, // Clears the output directory before building.
+    rollupOptions: {
+      external: Object.keys(dependencies ?? {}),
+    },
+    sourcemap: true,
+    emptyOutDir: true,
   },
-  plugins: [dts()], // Uses the 'vite-plugin-dts' plugin for generating TypeScript declaration files (d.ts).
 })
