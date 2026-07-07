@@ -17,7 +17,7 @@ npm install @codesign-eu/utils
 ## Usage
 
 ```ts
-import { dateTimeService, spatialService, GridLocationService } from '@codesign-eu/utils'
+import { dateTimeService, spatialService, GridLocationService, type LatLngBoundsLike } from '@codesign-eu/utils'
 
 const day = dateTimeService.formatDay(new Date('2026-04-28T12:30:00Z'))
 const parsed = dateTimeService.parseDate('20260428')
@@ -30,7 +30,17 @@ const pointLabel = spatialService.coordinatesGeoJsonToString({
 const locator = GridLocationService.latLngToGrid(52.2297, 21.0122, 6)
 const center = GridLocationService.gridToLatLng('KO02mf')
 
-console.log(day, parsed, pointLabel, locator, center)
+const bounds: LatLngBoundsLike = {
+  getNorth: () => 54,
+  getEast: () => 22,
+  getSouth: () => 52,
+  getWest: () => 20,
+}
+
+const viewportLocators = GridLocationService.locatorFeaturesForBounds(bounds, 4)
+const boundsQuery = spatialService.leafletBoundsToString(bounds)
+
+console.log(day, parsed, pointLabel, locator, center, viewportLocators[0]?.reference, boundsQuery)
 ```
 
 ## Public API
@@ -50,13 +60,16 @@ Helpers for formatting and comparing dates:
 
 Helpers for coordinate formatting and nested coordinate structures:
 
+- `LatLngBoundsLike`
 - `swapLatLng(coordinates)`
 - `leafletBoundsToString(boundsLike)`
 - `getPointFromPolygon(coordinates)`
 - `coordinatesGeoJsonToString(point)`
 - `coordinatesGeoJsonToDegreesString(point)`
 
-`leafletBoundsToString` accepts any object with `getNorth()`, `getEast()`, `getSouth()`, and `getWest()` methods, which keeps it compatible with Leaflet bounds objects without forcing a runtime Leaflet dependency.
+`LatLngBoundsLike` is the exported lightweight bounds contract for `leafletBoundsToString`.
+
+`leafletBoundsToString` stays compatible with Leaflet bounds objects, but the library does not require Leaflet as a consumer dependency.
 
 ### `GridLocationService`
 
@@ -64,7 +77,10 @@ Helpers for Maidenhead locator work:
 
 - `latLngToGrid(lat, lng, precision?)`
 - `gridToLatLng(locator)`
+- `gridToPolygon(locator)`
 - `locatorGridsForGeoJSON(feature, precision)`
+- `locatorGridsForBounds(bounds, precision)`
+- `locatorFeaturesForBounds(bounds, precision)`
 
 Supported precisions today:
 

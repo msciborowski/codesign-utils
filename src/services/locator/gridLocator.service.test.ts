@@ -1,8 +1,16 @@
+import type { Feature, Polygon } from 'geojson'
 import { describe, expect, it } from 'vitest'
+import type { LatLngBoundsLike } from '../spatial/spatial.service'
 import { GridLocationService } from './gridLocator.Service'
 
 import '@testing-library/jest-dom'
-import { Feature, Polygon } from 'geojson'
+
+const buildBounds = ({ east, north, south, west }: { east: number; north: number; south: number; west: number }): LatLngBoundsLike => ({
+  getEast: () => east,
+  getNorth: () => north,
+  getSouth: () => south,
+  getWest: () => west,
+})
 
 describe('gridLocator service', () => {
   describe('latLng to Locator', () => {
@@ -112,25 +120,45 @@ describe('gridLocator service', () => {
       const latLng = GridLocationService.gridToLatLng('KO02mf')
       expect(latLng).toEqual({ lat: 52.22916666666667, lng: 21.041666666666668 })
     })
+
     it('should convert locator to latLng for Chicago', () => {
       const latLng = GridLocationService.gridToLatLng('EN61ev')
       expect(latLng).toEqual({ lat: 41.895833333333336, lng: -87.625 })
     })
+
     it('should convert locator to latLng for London', () => {
       const latLng = GridLocationService.gridToLatLng('IO91')
       expect(latLng).toEqual({ lat: 51.5, lng: -1 })
     })
+
     it('should convert locator to latLng for Paris', () => {
       const latLng = GridLocationService.gridToLatLng('JN18eu')
       expect(latLng).toEqual({ lat: 48.85416666666667, lng: 2.375 })
     })
+
     it('should convert locator to latLng for Tokyo', () => {
       const latLng = GridLocationService.gridToLatLng('PM95tq')
       expect(latLng).toEqual({ lat: 35.6875, lng: 139.625 })
     })
+
     it('should convert locator to latLng for Sydney', () => {
       const latLng = GridLocationService.gridToLatLng('QF56')
       expect(latLng).toEqual({ lat: -33.5, lng: 151 })
+    })
+  })
+
+  describe('gridToPolygon', () => {
+    it('builds the expected polygon extent for a 4-character locator', () => {
+      const polygon = GridLocationService.gridToPolygon('IO91')
+
+      expect(polygon.geometry.type).toBe('Polygon')
+      expect(polygon.geometry.coordinates[0]).toEqual([
+        [-2, 51],
+        [0, 51],
+        [0, 52],
+        [-2, 52],
+        [-2, 51],
+      ])
     })
   })
 
@@ -154,8 +182,25 @@ describe('gridLocator service', () => {
       }
 
       const locators = GridLocationService.locatorGridsForGeoJSON(polygon, 4)
-      // expect(locators).toEqual([])
       expect(locators).toEqual(['IO80', 'IO81'])
+    })
+  })
+
+  describe('locatorGridsForBounds', () => {
+    it('returns aligned locators for a rectangular viewport', () => {
+      const locators = GridLocationService.locatorGridsForBounds(buildBounds({ east: -4, north: 51, south: 50, west: -5 }), 4)
+
+      expect(locators).toEqual(['IO80', 'IO81'])
+    })
+  })
+
+  describe('locatorFeaturesForBounds', () => {
+    it('returns ready-to-render locator polygons with centers and references', () => {
+      const features = GridLocationService.locatorFeaturesForBounds(buildBounds({ east: -4, north: 51, south: 50, west: -5 }), 4)
+
+      expect(features.map(feature => feature.reference)).toEqual(['IO80', 'IO81'])
+      expect(features[0]?.center).toEqual({ lat: 50.5, lng: -3 })
+      expect(features[0]?.polygon.geometry.type).toBe('Polygon')
     })
   })
 })

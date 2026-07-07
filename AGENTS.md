@@ -75,6 +75,10 @@ For shared geospatial helpers, prefer common standards and lightweight contracts
 - plain coordinate tuples
 - simple interface-like objects instead of heavy class requirements when possible
 
+For bounds-shaped inputs, prefer the exported `LatLngBoundsLike` contract over direct third-party runtime types unless there is a strong reason to couple the API to a specific library.
+
+For viewport-oriented Maidenhead helpers, keep the API bounds-based and render-oriented. Accept generic bounds contracts and return geometry/reference data, not app-specific controller state.
+
 ## Testing Expectations
 
 Every behavior change should come with tests.
@@ -112,3 +116,17 @@ If you change published entrypoints, build outputs, or dependencies, verify:
 - small usage examples
 
 Do not let the README drift into internal app documentation.
+
+When significant changes are made to the library, update both `README.md` and `AGENTS.md` in the same change set.
+
+Treat these as significant changes:
+
+- public API additions, removals, or behavior changes
+- new utility domains or exported modules
+- dependency changes that affect consumers
+- build, packaging, or publishing workflow changes
+- shifts in repository rules, scope, or contribution expectations
+
+`README.md` should describe the consumer-facing impact.
+
+`AGENTS.md` should describe the repository rule, maintenance expectation, or development workflow impact.
