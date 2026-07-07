@@ -113,6 +113,11 @@ describe('gridLocator service', () => {
       const locator = GridLocationService.latLngToGrid(69.6492, 18.9553, 6)
       expect(locator).toBe('JP99lp')
     })
+
+    it('should convert latLng to locator with precision 8 for Warsaw', () => {
+      const locator = GridLocationService.latLngToGrid(52.2297, 21.0122, 8)
+      expect(locator).toBe('KO02mf15')
+    })
   })
 
   describe('Locator to latLng', () => {
@@ -145,6 +150,11 @@ describe('gridLocator service', () => {
       const latLng = GridLocationService.gridToLatLng('QF56')
       expect(latLng).toEqual({ lat: -33.5, lng: 151 })
     })
+
+    it('should convert an 8-character locator to latLng', () => {
+      const latLng = GridLocationService.gridToLatLng('KO02mf15')
+      expect(latLng).toEqual({ lat: 52.23125, lng: 21.0125 })
+    })
   })
 
   describe('gridToPolygon', () => {
@@ -159,6 +169,36 @@ describe('gridLocator service', () => {
         [-2, 52],
         [-2, 51],
       ])
+    })
+
+    it('throws for an invalid locator', () => {
+      expect(() => GridLocationService.gridToPolygon('I')).toThrow('Invalid QTH locator format')
+    })
+  })
+
+  describe('invalid input handling', () => {
+    it('throws when converting an empty locator to latLng', () => {
+      expect(() => GridLocationService.gridToLatLng('')).toThrow('Invalid QTH locator format')
+    })
+
+    it('throws when converting a locator with an odd length to latLng', () => {
+      expect(() => GridLocationService.gridToLatLng('IO9')).toThrow('Invalid QTH locator format')
+    })
+
+    it('throws when converting a locator with an unsupported precision to latLng', () => {
+      expect(() => GridLocationService.gridToLatLng('IO91mf10aa')).toThrow('Invalid QTH locator format')
+    })
+
+    it('throws for an unsupported precision when converting latLng to a locator', () => {
+      // @ts-expect-error testing runtime guard against unsupported precision
+      expect(() => GridLocationService.latLngToGrid(52.2297, 21.0122, 3)).toThrow('Unsupported Maidenhead precision')
+    })
+
+    it('throws for an unsupported precision when building locator grids', () => {
+      // @ts-expect-error testing runtime guard against unsupported precision
+      expect(() => GridLocationService.locatorGridsForBounds(buildBounds({ east: -4, north: 51, south: 50, west: -5 }), 3)).toThrow(
+        'Unsupported Maidenhead precision'
+      )
     })
   })
 
@@ -184,6 +224,28 @@ describe('gridLocator service', () => {
       const locators = GridLocationService.locatorGridsForGeoJSON(polygon, 4)
       expect(locators).toEqual(['IO80', 'IO81'])
     })
+
+    it('deduplicates grid cells that clamp to the same locator near the pole', () => {
+      const polygon: Feature<Polygon> = {
+        type: 'Feature',
+        properties: {},
+        geometry: {
+          type: 'Polygon',
+          coordinates: [
+            [
+              [-1.0, 85.0],
+              [-1.0, 100.0],
+              [1.0, 100.0],
+              [1.0, 85.0],
+              [-1.0, 85.0],
+            ],
+          ],
+        },
+      }
+
+      const locators = GridLocationService.locatorGridsForGeoJSON(polygon, 4)
+      expect(new Set(locators).size).toBe(locators.length)
+    })
   })
 
   describe('locatorGridsForBounds', () => {
@@ -191,6 +253,18 @@ describe('gridLocator service', () => {
       const locators = GridLocationService.locatorGridsForBounds(buildBounds({ east: -4, north: 51, south: 50, west: -5 }), 4)
 
       expect(locators).toEqual(['IO80', 'IO81'])
+    })
+
+    it('normalizes bounds passed in with north/south and east/west swapped', () => {
+      const locators = GridLocationService.locatorGridsForBounds(buildBounds({ east: -5, north: 50, south: 51, west: -4 }), 4)
+
+      expect(locators).toEqual(['IO80', 'IO81'])
+    })
+
+    it('clamps out-of-range latitude and longitude values', () => {
+      const locators = GridLocationService.locatorGridsForBounds(buildBounds({ east: 185, north: 95, south: -95, west: -185 }), 2)
+
+      expect(locators.length).toBeGreaterThan(0)
     })
   })
 
