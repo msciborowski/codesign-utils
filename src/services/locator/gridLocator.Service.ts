@@ -23,11 +23,11 @@ const clampLongitude = (lng: number) => {
   return Math.max(-180, Math.min(180, lng))
 }
 
-function isSupportedPrecision(precision: number): precision is GridPrecision {
+const isSupportedPrecision = (precision: number): precision is GridPrecision => {
   return precision === 2 || precision === 4 || precision === 6 || precision === 8
 }
 
-function assertPrecision(precision: number): asserts precision is GridPrecision {
+const assertPrecision: (precision: number) => asserts precision is GridPrecision = precision => {
   if (!Number.isInteger(precision) || !isSupportedPrecision(precision)) {
     throw new Error('Unsupported Maidenhead precision')
   }

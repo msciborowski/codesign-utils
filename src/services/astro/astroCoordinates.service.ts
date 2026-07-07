@@ -14,7 +14,7 @@ import {
 } from './astroCalendar.service'
 import { abs, dHHour, dHMin, dHSec, floor, round, trunc } from './astroUtils.service'
 
-export function dMSToDecimalDegrees(coordinates: Coordinates): number {
+export const dMSToDecimalDegrees = (coordinates: Coordinates): number => {
   // TODO: verify d, m, s
   // m, s should be positive
   const { deg, min, sec } = coordinates
@@ -26,7 +26,7 @@ export function dMSToDecimalDegrees(coordinates: Coordinates): number {
   return deg < 0 ? c * -1 : c
 }
 
-export function decimalDegreesToDMS(decimal: number): Coordinates {
+export const decimalDegreesToDMS = (decimal: number): Coordinates => {
   const a = abs(decimal) // unsigned decimal
   const b = a * 3600 // total seconds
   const c = round(b % 60, 8) // seconds 8 decimal places
@@ -40,7 +40,7 @@ export function decimalDegreesToDMS(decimal: number): Coordinates {
 }
 
 const lctut = (lct: CalendarTime, daylightSaving: number, zoneCorrection: number, localDay: CalendarDate): number => {
-  const a = hMS2DecimalHours(lct.h as number, lct.m as number, lct.s as number)
+  const a = hMS2DecimalHours(lct.h, lct.m, lct.s)
   const b = a - daylightSaving - zoneCorrection
   const c = localDay.day + b / 24
   const d = jd(localDay.year, localDay.month, c)
@@ -51,7 +51,7 @@ const lctut = (lct: CalendarTime, daylightSaving: number, zoneCorrection: number
 }
 
 const lctGDay = (lct: CalendarTime, daylightSaving: number, zoneCorrection: number, localDay: CalendarDate): number => {
-  const a = hMS2DecimalHours(lct.h as number, lct.m as number, lct.s as number)
+  const a = hMS2DecimalHours(lct.h, lct.m, lct.s)
   const b = a - daylightSaving - zoneCorrection
   const c = localDay.day + b / 24
   const d = jd(localDay.year, localDay.month, c)
@@ -61,7 +61,7 @@ const lctGDay = (lct: CalendarTime, daylightSaving: number, zoneCorrection: numb
 }
 
 const lctGMonth = (lct: CalendarTime, daylightSaving: number, zoneCorrection: number, localDay: CalendarDate): number => {
-  const a = hMS2DecimalHours(lct.h as number, lct.m as number, lct.s as number)
+  const a = hMS2DecimalHours(lct.h, lct.m, lct.s)
   const b = a - daylightSaving - zoneCorrection
   const c = localDay.day + b / 24
   const d = jd(localDay.year, localDay.month, c)
@@ -70,7 +70,7 @@ const lctGMonth = (lct: CalendarTime, daylightSaving: number, zoneCorrection: nu
 }
 
 const lctGYear = (lct: CalendarTime, daylightSaving: number, zoneCorrection: number, localDay: CalendarDate): number => {
-  const a = hMS2DecimalHours(lct.h as number, lct.m as number, lct.s as number)
+  const a = hMS2DecimalHours(lct.h, lct.m, lct.s)
   const b = a - daylightSaving - zoneCorrection
   const c = localDay.day + b / 24
   const d = jd(localDay.year, localDay.month, c)
@@ -78,60 +78,48 @@ const lctGYear = (lct: CalendarTime, daylightSaving: number, zoneCorrection: num
   return jdcYear(d)
 }
 
-export function rightAscensionToHourAngle(
+const localSiderealTimeDecimalHours = (lct: CalendarTime, daylightSaving: number, zoneCorrection: number, day: CalendarDate, longitude: number): number => {
+  const ut = lctut(lct, daylightSaving, zoneCorrection, day)
+  const gDay = lctGDay(lct, daylightSaving, zoneCorrection, day)
+  const gMonth = lctGMonth(lct, daylightSaving, zoneCorrection, day)
+  const gYear = lctGYear(lct, daylightSaving, zoneCorrection, day)
+  const newUT = new CalendarDateTime(gYear, gMonth, gDay, ut, 0, 0)
+  const gst = universalTime2GreenwichSiderealTime(newUT).gst
+  const newGST = new CalendarTime(gst, 0, 0)
+
+  return greenwichSiderealTimeToLocalSiderealTime(newGST, longitude).lst
+}
+
+export const rightAscensionToHourAngle = (
   ra: CalendarTime,
   lct: CalendarTime,
   daylightSaving: number,
   zoneCorrection: number,
   day: CalendarDate,
   longitude: number
-): CalendarTime {
-  const ut = lctut(lct, daylightSaving, zoneCorrection, day)
-  const gDay = lctGDay(lct, daylightSaving, zoneCorrection, day)
-  const gMonth = lctGMonth(lct, daylightSaving, zoneCorrection, day)
-  const gYear = lctGYear(lct, daylightSaving, zoneCorrection, day)
-  const newUT = new CalendarDateTime(gYear, gMonth, gDay, ut, 0, 0)
-  const gst = universalTime2GreenwichSiderealTime(newUT).gst as number
-  const newGST = new CalendarTime(gst, 0, 0)
-  const lst = greenwichSiderealTimeToLocalSiderealTime(newGST, longitude).lst as number
-  const ra2 = hMS2DecimalHours(ra.h as number, ra.m as number, ra.s as number)
+): CalendarTime => {
+  const lst = localSiderealTimeDecimalHours(lct, daylightSaving, zoneCorrection, day, longitude)
+  const ra2 = hMS2DecimalHours(ra.h, ra.m, ra.s)
   const h1 = lst - ra2
   const h = h1 < 0 ? h1 + 24 : h1
 
-  const result = new CalendarTime()
-  result.h = dHHour(h)
-  result.m = dHMin(h)
-  result.s = dHSec(h)
-
-  return result
+  return new CalendarTime(dHHour(h), dHMin(h), dHSec(h))
 }
 
-export function hourAngleToRightAscension(
+export const hourAngleToRightAscension = (
   ha: CalendarTime,
   lct: CalendarTime,
   daylightSaving: number,
   zoneCorrection: number,
   day: CalendarDate,
   longitude: number
-): CalendarTime {
-  const ut = lctut(lct, daylightSaving, zoneCorrection, day)
-  const gDay = lctGDay(lct, daylightSaving, zoneCorrection, day)
-  const gMonth = lctGMonth(lct, daylightSaving, zoneCorrection, day)
-  const gYear = lctGYear(lct, daylightSaving, zoneCorrection, day)
-  const newUT = new CalendarDateTime(gYear, gMonth, gDay, ut, 0, 0)
-  const gst = universalTime2GreenwichSiderealTime(newUT).gst as number
-  const newGST = new CalendarTime(gst, 0, 0)
-  const lst = greenwichSiderealTimeToLocalSiderealTime(newGST, longitude).lst as number
-  const ha2 = hMS2DecimalHours(ha.h as number, ha.m as number, ha.s as number)
+): CalendarTime => {
+  const lst = localSiderealTimeDecimalHours(lct, daylightSaving, zoneCorrection, day, longitude)
+  const ha2 = hMS2DecimalHours(ha.h, ha.m, ha.s)
   const r1 = lst - ha2
   const ra = r1 < 0 ? r1 + 24 : r1
 
-  const result = new CalendarTime()
-  result.h = dHHour(ra)
-  result.m = dHMin(ra)
-  result.s = dHSec(ra)
-
-  return result
+  return new CalendarTime(dHHour(ra), dHMin(ra), dHSec(ra))
 }
 
 export const astroCoordinatesService = {

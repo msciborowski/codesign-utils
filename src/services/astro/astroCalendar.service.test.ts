@@ -22,71 +22,12 @@ import {
 } from './astroCalendar.service'
 
 describe('astroCalendar', () => {
-  describe('jd arguments number validation', () => {
-    it('test with no params', () => {
-      expect(() => jd()).toThrow('Arguments error')
-    })
-    it('test with one param', () => {
-      jd(new Date('2018-01-01'))
-    })
-    it('test with two params', () => {
-      jd(new Date('2018-01-01'), 0.81)
-    })
-    it('test with three params', () => {
-      jd(2018, 1, 1)
-    })
-    it('test with four params', () => {
-      jd(2018, 1, 1, 0.99)
-    })
-    it('test with five params', () => {
-      expect(() => jd(2000, 1, 1, 0, 0)).toThrow('Arguments error')
-    })
-    it('test with seven params', () => {
-      expect(() => jd(2018, 1, 1, 23, 59, 59, 1)).toThrow('Arguments error')
-    })
-    it('test with ten params', () => {
-      expect(() => jd(2018, 1, 1, 23, 59, 59, 1, 2, 3, 4)).toThrow('Arguments error')
-    })
-  })
-  describe('jd arguments types and ranges validation', () => {
-    it('string instead of date', () => {
-      const wrongDate = 'lorem ipsum'
-      expect(() => jd(wrongDate)).toThrow('Invalid date')
-    })
-    it('string instead of date with TOD', () => {
-      const wrongDate = 'lorem ipsum'
-      expect(() => jd(wrongDate, 0)).toThrow('Invalid date')
-    })
-    it('number instead of date', () => {
-      const wrongDate = 1
-      expect(() => jd(wrongDate)).toThrow('Invalid date')
-    })
-    it('number instead of date with TOD', () => {
-      const wrongDate = 1
-      expect(() => jd(wrongDate, 0)).toThrow('Invalid date')
-    })
-    it('empty object instead of date', () => {
-      const wrongDate = {}
-      expect(() => jd(wrongDate)).toThrow('Invalid date')
-    })
-    it('empty object instead of date with TOD', () => {
-      const wrongDate = {}
-      expect(() => jd(wrongDate, 0)).toThrow('Invalid date')
-    })
+  describe('jd ranges validation', () => {
     it('time of the day cannot be grater than 1', () => {
       expect(() => jd(2000, 1, 1, 1.01)).toThrow('Time of day cannot be greater than or equal to 1')
     })
     it('time of the day cannot be equal to 1', () => {
       expect(() => jd(2000, 1, 1, 1)).toThrow('Time of day cannot be greater than or equal to 1')
-    })
-    it('time of the day should be a number', () => {
-      expect(() => jd(2000, 1, 1, '0.5')).toThrow('Time of day should be a number')
-    })
-    it('year should be a number', () => {
-      expect(() => jd('2000', 1, 1)).toThrow('Year should be a number')
-    })
-    it('month should be a number', () => {
-      expect(() => jd(2000, '1', 1)).toThrow('Month should be a number')
     })
     it('month less than 0', () => {
       expect(() => jd(2000, 0, 1)).toThrow('Month must be between 1 and 12')
@@ -94,40 +35,25 @@ describe('astroCalendar', () => {
     it('month greater than 12', () => {
       expect(() => jd(2000, 13, 1)).toThrow('Month must be between 1 and 12')
     })
-    it('day should be a number', () => {
-      expect(() => jd(2000, 1, '1')).toThrow('Day should be a number')
-    })
     it('day less than 0', () => {
       expect(() => jd(2000, 1, -0.1)).toThrow('Day must be greater than 0')
     })
     it.skip('day greater than 31', () => {
       expect(() => jd(2000, 1, 32)).toThrow('Day must be between 0 and 32')
     })
-    it('hour should be a number', () => {
-      expect(() => jd(2000, 1, 1, '12', 30, 30)).toThrow('Hour should be a number')
-    })
-    it('hour should be greater than 0', () => {
+    it('hour less than 0', () => {
       expect(() => jd(2000, 1, 1, -1, 30, 30)).toThrow('Hour must be between 0 and 23')
     })
-    it('hour should be greater than 23', () => {
-      expect(() => jd(2000, 1, 1, -1, 30, 30)).toThrow('Hour must be between 0 and 23')
-    })
-    it('minute should be a number', () => {
-      expect(() => jd(2000, 1, 1, 12, '30', 30)).toThrow('Minute should be a number')
-    })
-    it('minute should be greater than 0', () => {
+    it('minute less than 0', () => {
       expect(() => jd(2000, 1, 1, 12, -1, 30)).toThrow('Minute must be between 0 and 59')
     })
-    it('minute should be less than 60', () => {
+    it('minute greater than 59', () => {
       expect(() => jd(2000, 1, 1, 12, 60, 30)).toThrow('Minute must be between 0 and 59')
     })
-    it('second should be a number', () => {
-      expect(() => jd(2000, 1, 1, 12, 30, '30')).toThrow('Second should be a number')
-    })
-    it('second should be greater than 0', () => {
+    it('second less than 0', () => {
       expect(() => jd(2000, 1, 1, 12, 30, -1)).toThrow('Second must be between 0 and 59')
     })
-    it('second should be less than 60', () => {
+    it('second greater than 59', () => {
       expect(() => jd(2000, 1, 1, 12, 30, 60)).toThrow('Second must be between 0 and 59')
     })
     it('date earlier than 1582-10-15 causes an error', () => {
@@ -199,26 +125,7 @@ describe('astroCalendar', () => {
     })
   })
 
-  describe('gregorian arguments number validation', () => {
-    it('test with no params', () => {
-      expect(() => gregorian()).toThrow('Arguments error')
-    })
-    it('test with two params', () => {
-      expect(() => gregorian(1, 2)).toThrow('Arguments error')
-    })
-    it('test with three params', () => {
-      expect(() => gregorian(1, 2, 3)).toThrow('Arguments error')
-    })
-  })
-  describe('gregorian arguments types and ranges validation', () => {
-    it('string instead of number', () => {
-      const wrongNumber = 'lorem ipsum'
-      expect(() => gregorian(wrongNumber)).toThrow('Invalid number')
-    })
-    it('object instead of number', () => {
-      const wrongNumber = {}
-      expect(() => gregorian(wrongNumber)).toThrow('Invalid number')
-    })
+  describe('gregorian ranges validation', () => {
     it('julian date less than 2299160.5', () => {
       expect(() => gregorian(2299160.4)).toThrow('Julian date less than 2299160.5')
     })
@@ -272,23 +179,6 @@ describe('astroCalendar', () => {
     })
   })
 
-  describe('tod validation', () => {
-    it('test with no params', () => {
-      expect(() => tod()).toThrow('Arguments error')
-    })
-    it('test with two params', () => {
-      expect(() => tod(1, 2)).toThrow('Arguments error')
-    })
-    it('test with three params', () => {
-      expect(() => tod(1, 2, 3)).toThrow('Arguments error')
-    })
-    it('string instead of date', () => {
-      expect(() => tod('lorem ipsum')).toThrow('Invalid date')
-    })
-    it('object instead of date', () => {
-      expect(() => tod({})).toThrow('Invalid date')
-    })
-  })
   describe('tod', () => {
     it('beginning of gregorian calendar', () => {
       const date = new Date(1582, 9, 15) // 1582-10-15

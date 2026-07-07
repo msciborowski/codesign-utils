@@ -58,12 +58,24 @@ export default [
       ...prettier.rules,
       'prettier/prettier': 'error',
       'react/react-in-jsx-scope': 'off',
+      // Handled by @typescript-eslint/no-unused-vars; the core rule false-positives on type signatures
+      'no-unused-vars': 'off',
       '@typescript-eslint/no-unused-vars': [
         'error',
         {
           argsIgnorePattern: '^_',
           varsIgnorePattern: '^_',
           ignoreRestSiblings: true,
+        },
+      ],
+      // Convention: const arrow functions instead of function declarations
+      'func-style': ['error', 'expression'],
+      // Convention: model precise types instead of falling back to unknown
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: 'TSUnknownKeyword',
+          message: 'Avoid unknown — model a precise type instead',
         },
       ],
     },
