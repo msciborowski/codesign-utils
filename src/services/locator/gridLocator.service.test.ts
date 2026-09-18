@@ -1,7 +1,7 @@
-import type { Feature, Polygon } from 'geojson'
+import type { Feature, MultiPolygon, Polygon } from 'geojson'
 import { describe, expect, it } from 'vitest'
 import type { LatLngBoundsLike } from '../spatial/spatial.service'
-import { GridLocationService } from './gridLocator.Service'
+import { GridLocationService } from './gridLocator.service'
 
 import '@testing-library/jest-dom'
 
@@ -222,10 +222,10 @@ describe('gridLocator service', () => {
       }
 
       const locators = GridLocationService.locatorGridsForGeoJSON(polygon, 4)
-      expect(locators).toEqual(['IO80', 'IO81'])
+      expect(locators).toEqual(['IO70', 'IO71', 'IO80', 'IO81'])
     })
 
-    it('deduplicates grid cells that clamp to the same locator near the pole', () => {
+    it('returns unique references for a polygon that reaches past the pole', () => {
       const polygon: Feature<Polygon> = {
         type: 'Feature',
         properties: {},
@@ -249,16 +249,16 @@ describe('gridLocator service', () => {
   })
 
   describe('locatorGridsForBounds', () => {
-    it('returns aligned locators for a rectangular viewport', () => {
+    it('aligns cells to the Maidenhead grid, not to the viewport corner', () => {
       const locators = GridLocationService.locatorGridsForBounds(buildBounds({ east: -4, north: 51, south: 50, west: -5 }), 4)
 
-      expect(locators).toEqual(['IO80', 'IO81'])
+      expect(locators).toEqual(['IO70', 'IO71', 'IO80', 'IO81'])
     })
 
     it('normalizes bounds passed in with north/south and east/west swapped', () => {
       const locators = GridLocationService.locatorGridsForBounds(buildBounds({ east: -5, north: 50, south: 51, west: -4 }), 4)
 
-      expect(locators).toEqual(['IO80', 'IO81'])
+      expect(locators).toEqual(['IO70', 'IO71', 'IO80', 'IO81'])
     })
 
     it('clamps out-of-range latitude and longitude values', () => {
@@ -272,9 +272,74 @@ describe('gridLocator service', () => {
     it('returns ready-to-render locator polygons with centers and references', () => {
       const features = GridLocationService.locatorFeaturesForBounds(buildBounds({ east: -4, north: 51, south: 50, west: -5 }), 4)
 
-      expect(features.map(feature => feature.reference)).toEqual(['IO80', 'IO81'])
-      expect(features[0]?.center).toEqual({ lat: 50.5, lng: -3 })
+      expect(features.map(feature => feature.reference)).toEqual(['IO70', 'IO71', 'IO80', 'IO81'])
+      expect(features[0]?.center).toEqual({ lat: 50.5, lng: -5 })
       expect(features[0]?.polygon.geometry.type).toBe('Polygon')
+    })
+  })
+  describe('locatorGridsForGeoJSON candidate filtering', () => {
+    const splitShape: Feature<MultiPolygon> = {
+      type: 'Feature',
+      properties: {},
+      geometry: {
+        type: 'MultiPolygon',
+        coordinates: [
+          [
+            [
+              [-5.9, 50.1],
+              [-5.9, 50.5],
+              [-5.5, 50.5],
+              [-5.5, 50.1],
+              [-5.9, 50.1],
+            ],
+          ],
+          [
+            [
+              [-1.9, 50.1],
+              [-1.9, 50.5],
+              [-1.5, 50.5],
+              [-1.5, 50.1],
+              [-1.9, 50.1],
+            ],
+          ],
+        ],
+      },
+    }
+
+    it('drops cells that only fall inside the bounding box', () => {
+      expect(GridLocationService.locatorGridsForGeoJSON(splitShape, 4)).toEqual(['IO70', 'IO90'])
+    })
+
+    it('would have returned the skipped cell from the bounding box alone', () => {
+      const boundsCandidates = GridLocationService.locatorGridsForBounds(buildBounds({ east: -1.5, north: 50.5, south: 50.1, west: -5.9 }), 4)
+
+      expect(boundsCandidates).toEqual(['IO70', 'IO80', 'IO90'])
+    })
+
+    it('rejects an unsupported precision', () => {
+      // @ts-expect-error testing runtime guard against unsupported precision
+      expect(() => GridLocationService.locatorGridsForGeoJSON(splitShape, 3)).toThrow('Unsupported Maidenhead precision')
+    })
+  })
+
+  describe('service surface', () => {
+    it('exposes the locator helpers the applications rely on', () => {
+      expect(Object.keys(GridLocationService).sort()).toEqual([
+        'countLocatorGridsForBounds',
+        'getGridStep',
+        'getLocatorChildren',
+        'getLocatorParent',
+        'getLocatorPrecision',
+        'gridToBounds',
+        'gridToLatLng',
+        'gridToPolygon',
+        'isValidLocator',
+        'latLngToGrid',
+        'locatorFeaturesForBounds',
+        'locatorGridsForBounds',
+        'locatorGridsForGeoJSON',
+        'normalizeLocator',
+      ])
     })
   })
 })

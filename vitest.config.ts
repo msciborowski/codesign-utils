@@ -9,7 +9,8 @@ export default defineConfig({
       provider: 'v8',
       reporter: ['text', 'html', 'lcov'],
       include: ['src/**/*.{ts,tsx}'],
-      exclude: ['src/**/*.d.ts', 'src/**/index.ts'],
+      // Entry barrels only re-export; v8 records no executable statements for them and reports 0%.
+      exclude: ['src/**/*.d.ts', 'src/**/index.ts', 'src/maidenhead.ts'],
       thresholds: {
         100: true,
       },

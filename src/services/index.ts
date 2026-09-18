@@ -1,4 +1,4 @@
 export * from './astro'
 export * from './datetime/dateTime.service'
 export * from './spatial/spatial.service'
-export * from './locator/gridLocator.Service'
+export * from './locator/gridLocator.service'

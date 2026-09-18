@@ -19,6 +19,9 @@ The public entrypoint is [src/index.ts](/Users/ms/Web/codesign-utils/src/index.t
 - `dateTimeService`
 - `spatialService`
 - `GridLocationService`
+- the astro services
+
+There is a second, narrower entrypoint at [src/maidenhead.ts](/Users/ms/Web/codesign-utils/src/maidenhead.ts), published as `@codesign-eu/utils/maidenhead`.
 
 The package is intentionally small and should remain easy to consume from browser-based TypeScript apps.
 
@@ -79,6 +82,16 @@ For bounds-shaped inputs, prefer the exported `LatLngBoundsLike` contract over d
 
 For viewport-oriented Maidenhead helpers, keep the API bounds-based and render-oriented. Accept generic bounds contracts and return geometry/reference data, not app-specific controller state.
 
+### Keep locator arithmetic free of turf
+
+`src/services/locator/maidenhead.ts` holds the Maidenhead maths and must stay dependency-free. `src/services/locator/gridLocator.service.ts` is the only locator file allowed to import turf, and it does so for two helpers: `gridToPolygon` and `locatorGridsForGeoJSON`.
+
+That split is what makes the `@codesign-eu/utils/maidenhead` subpath meaningful: a Node service can convert a locator to an envelope without loading a geometry library. When adding a locator helper, put it in `maidenhead.ts` unless it genuinely needs turf, and re-export it from both `GridLocationService` and `src/maidenhead.ts`.
+
+Locator cell counts grow fast enough to matter — an 8-character grid is 43 200 x 43 200 cells worldwide — so viewport helpers should give callers a way to measure before they allocate, the way `countLocatorGridsForBounds` does.
+
+Viewport helpers align cells to the Maidenhead grid, never to the caller's bounds. A viewport starting mid-cell must still include the cell it starts in; anchoring the sweep to the bounding-box corner silently drops the western and southern edge cells.
+
 ## Testing Expectations
 
 Every behavior change should come with tests.
@@ -105,6 +118,11 @@ If you change published entrypoints, build outputs, or dependencies, verify:
 
 - `npm run check`
 - `npm pack --dry-run`
+- that each entrypoint still loads in both module systems, for example
+  `node -e "require('./dist/maidenhead.cjs')"` and
+  `node --input-type=module -e "import('./dist/maidenhead.js')"`
+
+`npm run check` does not run coverage. Run `npm run test:coverage` when touching a service that is expected to stay at 100%.
 
 ## Documentation Rules
 

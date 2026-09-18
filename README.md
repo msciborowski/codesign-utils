@@ -38,9 +38,10 @@ const bounds: LatLngBoundsLike = {
 }
 
 const viewportLocators = GridLocationService.locatorFeaturesForBounds(bounds, 4)
+const locatorEnvelope = GridLocationService.gridToBounds('KO02kk')
 const boundsQuery = spatialService.leafletBoundsToString(bounds)
 
-console.log(day, parsed, pointLabel, locator, center, viewportLocators[0]?.reference, boundsQuery)
+console.log(day, parsed, pointLabel, locator, center, viewportLocators[0]?.reference, locatorEnvelope, boundsQuery)
 ```
 
 ## Public API
@@ -73,21 +74,54 @@ Helpers for coordinate formatting and nested coordinate structures:
 
 ### `GridLocationService`
 
-Helpers for Maidenhead locator work:
+Helpers for Maidenhead (QTH) locator work.
 
-- `latLngToGrid(lat, lng, precision?)`
-- `gridToLatLng(locator)`
-- `gridToPolygon(locator)`
-- `locatorGridsForGeoJSON(feature, precision)`
-- `locatorGridsForBounds(bounds, precision)`
-- `locatorFeaturesForBounds(bounds, precision)`
+Parsing and validation:
 
-Supported precisions today:
+- `isValidLocator(value)` - `true` for a well-formed 2/4/6/8-character locator; case-insensitive, surrounding whitespace ignored
+- `normalizeLocator(value)` - canonical form (`' ko02KK '` becomes `'KO02kk'`), or `null`
+- `getLocatorPrecision(value)` - `2 | 4 | 6 | 8`, or `null`
 
-- `2`
-- `4`
-- `6`
-- `8`
+Conversions:
+
+- `latLngToGrid(lat, lng, precision?)` - defaults to precision `6`
+- `gridToLatLng(locator)` - centre of the cell
+- `gridToBounds(locator)` - `[west, south, east, north]`, computed without turf
+- `gridToPolygon(locator)` - the cell as a GeoJSON polygon
+- `getGridStep(precision)` - cell size in degrees
+
+Hierarchy:
+
+- `getLocatorParent(locator)` - one precision level up, `null` for a 2-character field
+- `getLocatorChildren(locator)` - one precision level down (100, 576 and 100 respectively), empty for an 8-character locator
+
+Viewports:
+
+- `locatorGridsForBounds(bounds, precision)` - references overlapping the bounds, aligned to the Maidenhead grid
+- `countLocatorGridsForBounds(bounds, precision)` - how many references the call above would return, without building them
+- `locatorFeaturesForBounds(bounds, precision)` - reference, centre and polygon, ready to render
+- `locatorGridsForGeoJSON(feature, precision)` - references that actually intersect the geometry, not just its bounding box
+
+Supported precisions: `2`, `4`, `6`, `8`.
+
+Functions that take a locator throw `Invalid QTH locator format` when the value is not one. Functions that take a precision throw `Unsupported Maidenhead precision`.
+
+Two things worth knowing before rendering a grid:
+
+- Cell counts grow fast. An 8-character grid divides the world into 43 200 x 43 200 cells, so check `countLocatorGridsForBounds` before asking for the references.
+- Bounds that wrap across the antimeridian are not split. They widen to the whole longitude range.
+
+### `@codesign-eu/utils/maidenhead`
+
+The locator arithmetic is also published as a subpath entry with no runtime dependencies, for consumers that need locator maths without the geometry helpers - a Node service turning a locator into a database envelope, for example:
+
+```ts
+import { gridToBounds } from '@codesign-eu/utils/maidenhead'
+
+const [west, south, east, north] = gridToBounds('KO02kk')
+```
+
+The subpath exports everything listed above except `gridToPolygon`, `locatorFeaturesForBounds` and `locatorGridsForGeoJSON`, which need turf.
 
 ## Development
 

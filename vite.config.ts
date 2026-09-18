@@ -13,10 +13,14 @@ export default defineConfig({
   ],
   build: {
     lib: {
-      entry: './src/index.ts',
-      name: 'CodesignUtils',
+      // `index` is the full package; `maidenhead` is a dependency-free subset for consumers
+      // that need locator arithmetic without pulling in turf (see src/maidenhead.ts).
+      entry: {
+        index: './src/index.ts',
+        maidenhead: './src/maidenhead.ts',
+      },
       formats: ['es', 'cjs'],
-      fileName: format => `index.${format === 'es' ? 'js' : 'cjs'}`,
+      fileName: (format, entryName) => `${entryName}.${format === 'es' ? 'js' : 'cjs'}`,
     },
     rollupOptions: {
       external: Object.keys(dependencies ?? {}),
