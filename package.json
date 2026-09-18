@@ -1,6 +1,6 @@
 {
   "name": "@codesign-eu/utils",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "Utility helpers for spatial, date/time, astronomy, and Maidenhead (QTH) grid operations used by Codesign applications.",
   "type": "module",
   "main": "./dist/index.cjs",
