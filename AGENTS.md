@@ -9,6 +9,7 @@ It exists to hold small, shared helpers that are useful across Codesign projects
 - date and time formatting
 - geospatial coordinate helpers
 - Maidenhead / QTH grid conversions
+- reading amateur radio QSO log files (ADIF, EDI)
 
 It must stay generic. Do not add product-specific labels, workflows, API clients, or application business logic here.
 
@@ -22,6 +23,8 @@ The public entrypoint is [src/index.ts](/Users/ms/Web/codesign-utils/src/index.t
 - the astro services
 
 There is a second, narrower entrypoint at [src/maidenhead.ts](/Users/ms/Web/codesign-utils/src/maidenhead.ts), published as `@codesign-eu/utils/maidenhead`.
+
+A third one, [src/qso-log.ts](/Users/ms/Web/codesign-utils/src/qso-log.ts), published as `@codesign-eu/utils/qso-log`, reads QSO log files (`src/services/qso-log`).
 
 The package is intentionally small and should remain easy to consume from browser-based TypeScript apps.
 
@@ -91,6 +94,16 @@ That split is what makes the `@codesign-eu/utils/maidenhead` subpath meaningful:
 Locator cell counts grow fast enough to matter — an 8-character grid is 43 200 x 43 200 cells worldwide — so viewport helpers should give callers a way to measure before they allocate, the way `countLocatorGridsForBounds` does.
 
 Viewport helpers align cells to the Maidenhead grid, never to the caller's bounds. A viewport starting mid-cell must still include the cell it starts in; anchoring the sweep to the bounding-box corner silently drops the western and southern edge cells.
+
+### Log files: one facade, generic output
+
+`src/services/qso-log` must stay dependency-free and run unchanged in the browser and in Node: applications parse a log for a preview in the browser and again on the server, and both must agree.
+
+`importLog` is the only entry applications should need. Each format has its own reader (`adi.ts`, `edi.ts`); `logImport.ts` maps it to the same `LogQso` shape and `detectLogFormat` knows its extension and signature. A new format (ADX, Cabrillo) follows the same pattern. A value a format does not have stays `null` (EDI has no frequency per QSO): do not fill it in with a guess, that is the application's call. The facade normalises (trims, upper-cases callsigns and modes, lower-cases bands, turns ADIF dates and numbers into ISO moments and numbers) but does not judge: whether a band, mode or locator is acceptable is the application's rule, so do not add programme- or contest-specific filters here.
+
+Relative imports in `src/qso-log.ts` and `src/services/qso-log` carry the `.js` extension: the generated declarations keep the specifiers, and consumers compiled with `moduleResolution: nodenext` (a NestJS API) resolve extensionless or directory specifiers to nothing, which turns every type of the subpath into `any`.
+
+The readers never throw. They recover from what real logging programs write (byte-counted lengths of non-ASCII values, a missing `<EOH>` or final `<EOR>` in ADI; a missing identifier, short QSO lines or a wrong `[QSORecords;N]` count in EDI) and report it in `problems`.
 
 ## Testing Expectations
 

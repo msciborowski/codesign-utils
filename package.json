@@ -1,7 +1,7 @@
 {
   "name": "@codesign-eu/utils",
-  "version": "1.1.1",
-  "description": "Utility helpers for spatial, date/time, astronomy, and Maidenhead (QTH) grid operations used by Codesign applications.",
+  "version": "1.2.0",
+  "description": "Utility helpers for spatial, date/time, astronomy, Maidenhead (QTH) grid operations and QSO log files (ADIF, EDI) used by Codesign applications.",
   "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.js",
@@ -20,6 +20,11 @@
       "types": "./dist/maidenhead.d.ts",
       "import": "./dist/maidenhead.js",
       "require": "./dist/maidenhead.cjs"
+    },
+    "./qso-log": {
+      "types": "./dist/qso-log.d.ts",
+      "import": "./dist/qso-log.js",
+      "require": "./dist/qso-log.cjs"
     },
     "./package.json": "./package.json"
   },
@@ -53,6 +58,8 @@
     "geospatial",
     "geojson",
     "maidenhead",
+    "adif",
+    "edi",
     "datetime"
   ],
   "repository": {

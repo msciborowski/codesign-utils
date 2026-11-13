@@ -2,11 +2,12 @@
 
 Shared TypeScript utilities for Codesign applications.
 
-The library currently focuses on three areas:
+The library currently focuses on four areas:
 
 - date and time helpers
 - spatial / coordinate formatting helpers
 - Maidenhead (QTH) grid conversion helpers
+- reading amateur radio QSO log files (ADIF, EDI)
 
 ## Installation
 
@@ -122,6 +123,48 @@ const [west, south, east, north] = gridToBounds('KO02kk')
 ```
 
 The subpath exports everything listed above except `gridToPolygon`, `locatorFeaturesForBounds` and `locatorGridsForGeoJSON`, which need turf.
+
+### `@codesign-eu/utils/qso-log`
+
+Reads amateur radio QSO log files, with no runtime dependencies, so a browser preview and a server check of the same file give the same result:
+
+```ts
+import { importLog } from '@codesign-eu/utils/qso-log'
+
+const log = importLog({ name: file.name, content: await file.text() })
+
+if (log) {
+  for (const qso of log.qsos) {
+    console.log(log.format, qso.callsign, qso.qsoAt, qso.band, qso.frequencyMhz, qso.mode, qso.locator)
+  }
+}
+```
+
+- `importLog({ name, content })` - one entry point for log files: returns `{ format, program, qsos, problems }`, or `null` when the format is not supported. Formats: ADIF in the ADI syntax (`.adi`, `.adif`) and EDI, the IARU Region 1 contest log (`REG1TEST`, `.edi`). Further formats will return the same shape.
+- `detectLogFormat({ name, content })` - `'adif'` or `'edi'` by the extension, else by the content (`[REG1TEST;` at the start, an `<EOR>` anywhere); `null` otherwise. ADX (XML) and Cabrillo are not read.
+- `parseAdi(text)` - the ADI reader: header fields, records as upper-case field name → value, and the problems it recovered from.
+- `parseEdi(text)` - the EDI reader: header (upper-case keys), remarks, QSO lines field by field, and the problems it recovered from.
+- `adifDateTime(date, time)` - ADIF `YYYYMMDD` and `HHMM`/`HHMMSS` (UTC) as an ISO 8601 moment, or `null`.
+- `adifBandOfMhz(mhz)`, `ADIF_BANDS` - the ADIF band enumeration (3.1.7) and the band of a frequency.
+- `ediBandMhz(pband)`, `isEdi(text)` - EDI `PBand` (`145 MHz`, `1,3 GHz`) in MHz, and whether a text starts like an EDI file.
+
+Each QSO carries `record` (position in the file), `callsign`, `stationCallsign`, `locator`, `myLocator`, `qsoAt`, `frequencyMhz`, `band` (an ADIF band name, lower-case), `mode` and `submode` (upper-case), and every field as written in `fields`. Values are trimmed; missing or malformed ones are `null`. Locators, bands and callsigns are not validated: that is up to the application.
+
+| QSO field         | ADIF                                | EDI                                                                      |
+| ----------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| `callsign`        | `CALL`                              | call; `null` for an `ERROR` line                                         |
+| `stationCallsign` | `STATION_CALLSIGN`, else `OPERATOR` | `PCall` (header)                                                         |
+| `locator`         | `GRIDSQUARE`                        | received WWL                                                             |
+| `myLocator`       | `MY_GRIDSQUARE`                     | `PWWLo` (header)                                                         |
+| `qsoAt`           | `QSO_DATE` + `TIME_ON`              | `YYMMDD` + `HHMM`, the century from `TDate`                              |
+| `frequencyMhz`    | `FREQ`                              | always `null`: EDI has no frequency per QSO                              |
+| `band`            | `BAND`                              | `PBand` (header) mapped to the ADIF band                                 |
+| `mode`            | `MODE`                              | mode codes 1 SSB, 2 CW, 5 AM, 6 FM, 8 SSTV, 9 ATV; `null` for 0, 3, 4, 7 |
+| `fields`          | ADIF field names                    | `DATE`, `TIME`, `CALL`, `MODE_CODE` … `RECEIVED_WWL` … `DUPLICATE`       |
+
+ADI is specified as ASCII, but logging programs write UTF-8 and count value lengths in bytes, characters or UTF-16 code units. Lengths are read in UTF-16 code units, and a value whose length runs into the next data specifier is cut before it (`LENGTH_MISMATCH` in `problems`), so one name with diacritics does not shift the fields after it. The other ADI problems are `TRUNCATED_VALUE`, `DUPLICATE_FIELD` (the first value is kept), `UNTERMINATED_RECORD` (fields after the last `<EOR>` are left out) and `MISSING_EOH`. EDI problems are `MISSING_IDENTIFIER`, `SHORT_RECORD` (a QSO line with fewer than ten fields, left out) and `RECORD_COUNT`.
+
+Everything in this subpath is also exported from the package root.
 
 ## Development
 
